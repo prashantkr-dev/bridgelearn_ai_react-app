@@ -18,9 +18,10 @@ export default function Header({
 
   const navSteps = [
     { id: 'setup', label: '1. Topic Setup', disabled: false },
-    { id: 'map', label: '2. Two-Stage Map', disabled: !chapterData },
-    { id: 'quiz', label: '3. 20-Q Assessment', disabled: !chapterData },
-    { id: 'results', label: '4. Gap Remediation', disabled: !chapterData || !quizSubmitted },
+    { id: 'difficultTopics', label: '2. Difficulty Check', disabled: !chapterData },
+    { id: 'personalisedLearn', label: '3. Learn & Mind Map', disabled: !chapterData },
+    { id: 'quiz', label: '4. Quiz', disabled: !chapterData },
+    { id: 'results', label: '5. Analysis', disabled: !chapterData || !quizSubmitted },
   ];
 
   return (
@@ -46,7 +47,9 @@ export default function Header({
 
         <nav className="hidden sm:flex items-center gap-1 bg-cream-100 p-1 rounded-2xl border border-cream-200">
           {navSteps.map((step) => {
-            const isActive = currentView === step.id;
+            const isActive = currentView === step.id || 
+              (step.id === 'difficultTopics' && currentView === 'difficultTopics') ||
+              (step.id === 'personalisedLearn' && currentView === 'personalisedLearn');
             return (
               <button
                 key={step.id}

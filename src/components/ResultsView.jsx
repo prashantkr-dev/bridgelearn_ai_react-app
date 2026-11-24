@@ -1,6 +1,7 @@
 import React from 'react';
-import { BarChart3, LifeBuoy, Trophy, Video, RefreshCw } from 'lucide-react';
+import { BarChart3, LifeBuoy, Trophy, Video, RefreshCw, ExternalLink } from 'lucide-react';
 import { checkFillAnswer, gradeQuiz } from '../utils/grading';
+import { getVideoLinksForQuestion } from '../utils/videoLinks';
 
 export default function ResultsView({
   data,
@@ -137,10 +138,11 @@ export default function ResultsView({
         <div>
           <h2 className="font-display text-xl font-bold text-ink-800 flex items-center gap-2">
             <LifeBuoy className="w-5 h-5 text-peach-600" />
-            <span>Targeted Remediation &amp; YouTube Video Search</span>
+            <span>Targeted Remediation — PW &amp; Khan Academy Video Fix</span>
           </h2>
           <p className="text-xs text-ink-600">
-            Step-by-step solutions and direct video searches for identified weak chapter topics.
+            Step-by-step solutions + direct <strong>Physics Wallah (PW)</strong> and{' '}
+            <strong>Khan Academy</strong> video links with timestamps for every weak topic.
           </p>
         </div>
 
@@ -162,18 +164,15 @@ export default function ResultsView({
             stats.weakIndices.map((idx) => {
               const q = data.quiz[idx];
               const isMcq = q.type === 'mcq';
-              const ytQuery = encodeURIComponent(
-                `Class 11 ${data.subject} ${data.chapterTitle} ${q.conceptName}`
-              );
-              const ytUrl = `https://www.youtube.com/results?search_query=${ytQuery}`;
+              const videoLinks = getVideoLinksForQuestion(data.subject, data.chapterTitle, q.conceptName);
 
               return (
                 <div
                   key={idx}
                   className="bg-white rounded-3xl border border-cream-200 soft-shadow p-6 space-y-4"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -185,19 +184,52 @@ export default function ResultsView({
                           Q{idx + 1} • {isMcq ? 'Section A MCQ Gap' : 'Section B Fill-in Gap'}
                         </span>
                         <span className="text-xs font-bold text-ink-800">{q.conceptName}</span>
+                        {videoLinks.isCurated && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-sage-100 text-sage-700">
+                            ★ Curated video
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-ink-600 font-medium">{q.question}</p>
                     </div>
-                    <a
-                      href={ytUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-colors shrink-0 flex items-center justify-center gap-1.5"
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      <span>Watch YouTube Fix</span>
-                    </a>
+
+                    {/* Video Fix Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                      <a
+                        href={videoLinks.pw}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                        <span>PW Video</span>
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </a>
+                      <a
+                        href={videoLinks.khan}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3.5 py-2 rounded-xl bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Video className="w-3.5 h-3.5" />
+                        <span>Khan Academy</span>
+                        <ExternalLink className="w-3 h-3 opacity-60" />
+                      </a>
+                    </div>
                   </div>
+
+                  {/* Video link description */}
+                  <div className="flex items-start gap-2 p-3 rounded-xl bg-orange-50 border border-orange-100 text-[11px] text-orange-800">
+                    <Video className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <p>
+                      <strong>PW (Physics Wallah):</strong> Alakh Pandey's renowned free video lectures on this exact concept •{' '}
+                      <strong>Khan Academy:</strong> Step-by-step interactive explanation with practice exercises.
+                      {videoLinks.isCurated
+                        ? ' Direct video links with timestamps provided.'
+                        : ' Searching for the best match for this concept.'}
+                    </p>
+                  </div>
+
                   <div className="p-4 rounded-2xl bg-cream-50 border border-cream-200 space-y-1.5 text-xs">
                     <p className="font-bold text-sage-700">Detailed Solution &amp; Concept Rule:</p>
                     <p className="text-ink-800 leading-relaxed">{q.explanation}</p>

@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import {
   Sparkles,
   Cpu,
-  Zap,
-  Sigma,
-  Atom,
-  BookOpenText,
   ChevronDown,
   Search,
   ArrowUpRight,
@@ -111,63 +107,6 @@ export default function SetupView({ aiConfig, onOpenApiModal, onLaunchChapter })
           >
             Configure AI Key
           </button>
-        </div>
-
-        {/* Quick Sample Launchers */}
-        <div className="bg-sage-50 border border-sage-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center shrink-0 mt-0.5">
-              <Zap className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-sage-700">
-                Instant Chapter Demos
-              </p>
-              <p className="text-sm text-ink-800 font-bold">
-                Try Straight Lines, Kinematics, or The Adventure
-              </p>
-              <p className="text-xs text-ink-500">
-                Full 20 unique chapter-isolated questions ready offline or via live AI
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() =>
-                onLaunchChapter('CBSE (NCERT)', 'Grade 11', 'Mathematics', 'Straight Lines')
-              }
-              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-peach-600 hover:bg-peach-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-sm"
-            >
-              <Sigma className="w-3.5 h-3.5" />
-              <span>Straight Lines</span>
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                onLaunchChapter(
-                  'CBSE (NCERT)',
-                  'Grade 11',
-                  'Physics',
-                  'Motion in a Straight Line'
-                )
-              }
-              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-sm"
-            >
-              <Atom className="w-3.5 h-3.5" />
-              <span>Kinematics</span>
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                onLaunchChapter('CBSE (NCERT)', 'Grade 11', 'English', 'The Adventure')
-              }
-              className="flex-1 sm:flex-initial px-3 py-2 rounded-xl bg-lavender-600 hover:bg-lavender-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1 shadow-sm"
-            >
-              <BookOpenText className="w-3.5 h-3.5" />
-              <span>The Adventure</span>
-            </button>
-          </div>
         </div>
 
         {/* Setup Form */}

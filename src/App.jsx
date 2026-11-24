@@ -14,11 +14,14 @@ import Header from './components/Header';
 import SetupView from './components/SetupView';
 import MapView from './components/MapView';
 import QuizView from './components/QuizView';
+import CoachingQuizView from './components/CoachingQuizView';
 import ResultsView from './components/ResultsView';
 import ConceptModal from './components/ConceptModal';
 import ApiKeyModal from './components/ApiKeyModal';
 import ConfirmSubmitModal from './components/ConfirmSubmitModal';
 import ToastContainer from './components/ToastContainer';
+import DifficultTopicsView from './components/DifficultTopicsView';
+import PersonalisedLearnView from './components/PersonalisedLearnView';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('setup');
@@ -34,6 +37,9 @@ export default function App() {
   const [understoodTopics, setUnderstoodTopics] = useState(() => new Set());
   const [modalConcept, setModalConcept] = useState(null);
   const [modalIsSubtopic, setModalIsSubtopic] = useState(false);
+
+  // Personalised learning plan state
+  const [learningPlan, setLearningPlan] = useState(null); // { selectedTopics, topicsMissingPrereqs, topicsReadyForMain }
 
   const [quizAnswers, setQuizAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -60,7 +66,7 @@ export default function App() {
 
   const navigateTo = useCallback(
     (viewId) => {
-      if ((viewId === 'map' || viewId === 'quiz') && !chapterData) {
+      if ((viewId === 'map' || viewId === 'quiz' || viewId === 'difficultTopics' || viewId === 'personalisedLearn') && !chapterData) {
         showToast('Please select a chapter first.', 'info');
         return;
       }
@@ -226,7 +232,8 @@ export default function App() {
     setQuizAnswers({});
     setCurrentQuestionIndex(0);
     setQuizSubmitted(false);
-    setCurrentView('map');
+    setLearningPlan(null);
+    setCurrentView('difficultTopics');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -303,6 +310,8 @@ export default function App() {
   const totalQuestions = chapterData?.quiz?.length || 20;
 
   const handleRequestSubmit = () => {
+    // CoachingQuizView enforces all-answered before calling this.
+    // Keep the confirm modal as a safety net for edge cases.
     if (answeredCount < totalQuestions) {
       setConfirmSubmitOpen(true);
     } else {
@@ -396,8 +405,33 @@ export default function App() {
           />
         )}
 
+        {currentView === 'difficultTopics' && (
+          <DifficultTopicsView
+            data={chapterData}
+            onProceed={(plan) => {
+              setLearningPlan(plan);
+              setCurrentView('personalisedLearn');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onSkip={() => {
+              setLearningPlan({ selectedTopics: [], topicsMissingPrereqs: [], topicsReadyForMain: [] });
+              setCurrentView('map');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
+
+        {currentView === 'personalisedLearn' && (
+          <PersonalisedLearnView
+            data={chapterData}
+            learningPlan={learningPlan}
+            onStartQuiz={() => navigateTo('quiz')}
+            onBackToMap={() => navigateTo('map')}
+          />
+        )}
+
         {currentView === 'quiz' && (
-          <QuizView
+          <CoachingQuizView
             data={chapterData}
             questionSetIndex={questionSetIndex}
             usingLiveAiQuiz={usingLiveAiQuiz}
@@ -413,7 +447,7 @@ export default function App() {
             onChangeFill={(idx, val) => setQuizAnswers((prev) => ({ ...prev, [idx]: val }))}
             onRegenerate={handleRegenerateQuiz}
             onRequestSubmit={handleRequestSubmit}
-            onExit={() => navigateTo('map')}
+            onExit={() => navigateTo(learningPlan ? 'personalisedLearn' : 'map')}
             onOpenApiModal={() => setApiModalOpen(true)}
           />
         )}
@@ -432,7 +466,7 @@ export default function App() {
               setQuizSubmitted(false);
               setCurrentView('quiz');
             }}
-            onBackToMap={() => navigateTo('map')}
+            onBackToMap={() => navigateTo(learningPlan ? 'personalisedLearn' : 'map')}
           />
         )}
       </main>
