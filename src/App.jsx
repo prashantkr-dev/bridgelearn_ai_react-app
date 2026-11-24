@@ -104,27 +104,6 @@ export default function App() {
       null;
     const resolvedTitle = matchChapter ? matchChapter.title : chapterTitle;
 
-    let aiMap = null;
-    let mapLive = false;
-    let modelLabel = '';
-    let aiErr = '';
-
-    if (hasKey) {
-      try {
-        setLoadingState({
-          title: `Connecting to ${cfg.provider === 'gemini' ? cfg.geminiModel : cfg.openaiModel}...`,
-          subtitle: `Generating authentic chapter map for "${resolvedTitle}"...`,
-          progress: 45,
-        });
-        const mapRes = await fetchAiChapterMap(board, grade, subject, resolvedTitle);
-        aiMap = mapRes.parsed;
-        mapLive = true;
-        modelLabel = mapRes.modelLabel;
-      } catch (err) {
-        aiErr = err.message;
-      }
-    }
-
     const defaultPrereqs = matchChapter?.prereqs || [
       `Core ${subject} Fundamentals`,
       `Foundational Terminology & Notation`,
@@ -138,17 +117,53 @@ export default function App() {
       `Applications & Exam Problems in ${resolvedTitle}`,
     ];
 
+    let aiMap = null;
+    let mapLive = false;
+    let modelLabel = '';
+    let aiErr = '';
+
+    if (hasKey) {
+      try {
+        setLoadingState({
+          title: `Connecting to ${cfg.provider === 'gemini' ? cfg.geminiModel : cfg.openaiModel}...`,
+          subtitle: `Generating authentic chapter map for "${resolvedTitle}"...`,
+          progress: 45,
+        });
+        const mapRes = await fetchAiChapterMap(board, grade, subject, resolvedTitle, defaultPrereqs, defaultTopics);
+        aiMap = mapRes.parsed;
+        mapLive = true;
+        modelLabel = mapRes.modelLabel;
+      } catch (err) {
+        aiErr = err.message;
+      }
+    }
+
+    const isGenericText = (txt) => {
+      if (!txt || typeof txt !== 'string') return true;
+      const lower = txt.toLowerCase();
+      return (
+        lower.includes('standard ncert definitions') ||
+        lower.includes('core mathematical concept in') ||
+        lower.includes('substitute into the governing') ||
+        lower.includes('apply standard rules') ||
+        txt.trim().length < 20
+      );
+    };
+
     const rawPrereqs =
       Array.isArray(aiMap?.prerequisites) && aiMap.prerequisites.length >= 2
-        ? aiMap.prerequisites.map((p, idx) => ({
-            id: p.id || `prereq_${idx + 1}`,
-            title: p.title || defaultPrereqs[idx] || `Prerequisite ${idx + 1}`,
-            grade: p.grade || 'Grade 8-10 Foundation',
-            overview: p.overview || '',
-            formula: p.formula || '',
-            connection: p.connection || '',
-            example: p.example || '',
-          }))
+        ? aiMap.prerequisites.map((p, idx) => {
+            const fallback = getConceptData(p.title || defaultPrereqs[idx], subject, resolvedTitle, false);
+            return {
+              id: p.id || `prereq_${idx + 1}`,
+              title: p.title || defaultPrereqs[idx] || `Prerequisite ${idx + 1}`,
+              grade: p.grade || fallback.grade || 'Grade 8-10 Foundation',
+              overview: !isGenericText(p.overview) ? p.overview : fallback.overview,
+              formula: !isGenericText(p.formula) ? p.formula : fallback.formula,
+              connection: !isGenericText(p.connection) ? p.connection : fallback.connection,
+              example: !isGenericText(p.example) ? p.example : fallback.example,
+            };
+          })
         : defaultPrereqs.map((pStr, idx) => {
             const info = getConceptData(pStr, subject, resolvedTitle, false);
             return { id: `prereq_${idx + 1}`, title: pStr, ...info };
@@ -156,15 +171,18 @@ export default function App() {
 
     const rawTopics =
       Array.isArray(aiMap?.chapterSubtopics) && aiMap.chapterSubtopics.length >= 2
-        ? aiMap.chapterSubtopics.map((t, idx) => ({
-            id: t.id || `topic_${idx + 1}`,
-            title: t.title || defaultTopics[idx] || `Subtopic ${idx + 1}`,
-            grade: t.grade || `${grade} Core Subtopic`,
-            overview: t.overview || '',
-            formula: t.formula || '',
-            connection: t.connection || '',
-            example: t.example || '',
-          }))
+        ? aiMap.chapterSubtopics.map((t, idx) => {
+            const fallback = getConceptData(t.title || defaultTopics[idx], subject, resolvedTitle, true);
+            return {
+              id: t.id || `topic_${idx + 1}`,
+              title: t.title || defaultTopics[idx] || `Subtopic ${idx + 1}`,
+              grade: t.grade || fallback.grade || `${grade} Core Subtopic`,
+              overview: !isGenericText(t.overview) ? t.overview : fallback.overview,
+              formula: !isGenericText(t.formula) ? t.formula : fallback.formula,
+              connection: !isGenericText(t.connection) ? t.connection : fallback.connection,
+              example: !isGenericText(t.example) ? t.example : fallback.example,
+            };
+          })
         : defaultTopics.map((tStr, idx) => {
             const info = getConceptData(tStr, subject, resolvedTitle, true);
             return { id: `topic_${idx + 1}`, title: tStr, ...info };

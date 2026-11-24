@@ -344,16 +344,26 @@ export async function testAiConnection({ provider, apiKey, geminiModel, openaiBa
   return `Connected to ${model}.`;
 }
 
-export async function fetchAiChapterMap(board, grade, subject, chapterTitle) {
+export async function fetchAiChapterMap(board, grade, subject, chapterTitle, defaultPrereqs = [], defaultTopics = []) {
+  const prereqHint = defaultPrereqs.length ? `Prerequisites to cover:\n- ${defaultPrereqs.join('\n- ')}` : '';
+  const topicHint = defaultTopics.length ? `Core chapter subtopics to cover:\n- ${defaultTopics.join('\n- ')}` : '';
+
   const prompt = `Generate a comprehensive, authentic NCERT study map JSON for:
 Board: ${board} | Grade: ${grade} | Subject: ${subject} | Chapter: "${chapterTitle}".
+${prereqHint}
+${topicHint}
 
-Requirements:
+CRITICAL RULES:
 - Return exactly 4 earlier-grade prerequisites (id: "prereq_1".."prereq_4") and 4 core chapter subtopics (id: "topic_1".."topic_4").
-- Every overview, formula/framework, connection, and worked example must be 100% specific to "${chapterTitle}" in ${subject} — zero generic boilerplate.
+- Base the titles directly on the prerequisites and subtopics listed above.
+- For EVERY prerequisite and subtopic, write distinct, subject-specific, and mathematically/scientifically authentic details:
+  * overview: 2-3 sentences explaining the core theory and rules (NO generic boilerplate like "Apply standard NCERT definitions").
+  * formula: Real mathematical formulas, identities, or governing laws (e.g., "A ∪ B = {x : x ∈ A or x ∈ B}", "v = u + at", "PV = nRT").
+  * connection: Explicitly how this concept connects to and prepares for "${chapterTitle}".
+  * example: A complete worked Question and step-by-step Solution with concrete numbers and answers.
 - Return valid JSON with keys: chapterTitle, overview, prerequisites, chapterSubtopics.`;
 
-  return callAiJson(prompt, CHAPTER_MAP_SCHEMA, 0.5, 4096);
+  return callAiJson(prompt, CHAPTER_MAP_SCHEMA, 0.4, 4096);
 }
 
 export async function fetchAiQuizQuestions(
